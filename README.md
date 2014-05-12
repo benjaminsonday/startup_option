@@ -1,0 +1,1 @@
+Small repo used to simulate the value of startup options to employees. Employees have two advantages over, e.g., VCs: (1) they have the "option" to quit whenver they want (after the first year) (2) they don't have to put money up on day 1 (which saves them on interest).
