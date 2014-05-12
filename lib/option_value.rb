@@ -22,10 +22,14 @@ class OptionValue
     return x
   end
 
-  # blah = OptionValue.new(1, 0.3, 0.9, 1.1)
   # initial_per_share: FMV of shares on day 0
   # charged_per_share: how much charged per share per unit time
   # ...assuming we get one share per unit time...
+  #
+  # Artsy is roughly OptionValue.new(1, 0.2, 0.4, 3); I can make
+  # 3x more somewhere else at Artsy's current market price, but
+  # it grows at about 20% per year, and the volatility is about 40%.
+  # This means I break even barely.
   def initialize(initial_per_share, drift, volatility, charged_per_share,
       cliff = 1, duration = 4, dt = 0.01)
     self.initial_per_share = initial_per_share
