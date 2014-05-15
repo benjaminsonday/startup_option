@@ -1,6 +1,5 @@
 class OptionValue
-  attr_accessor :initial_per_share, :drift, :volatility, :charged_per_share,
-                  :cliff, :duration, :dt
+  attr_accessor :initial_per_share, :drift, :volatility, :charged_per_share, :cliff, :duration, :dt
 
   # Assume the company is geometric Brownian motion
   def simulate_path
@@ -20,6 +19,29 @@ class OptionValue
     x = mean + scale * Math.cos(theta)
     # y = mean + scale * Math.sin(theta)
     return x
+  end
+
+  # P[z > N]
+  def self.cdf(z)
+    (0.5 * (1.0 + Math.erf((z*1.0)/1.4142135623730951)))
+  end
+
+  def delta(val_per_share, time_left)
+    dist_from_mean = val_per_share - charged_per_share
+    to_z = dist_from_mean / volatility / Math.sqrt(time_left)
+  end
+
+  # TODO: this!
+  def binomial_tree
+    path = simulate_path
+    # 1st do binomial tree to figure out how much this contract is worth
+    # at a bunch of different nodes:
+    # At exp, V(T,S) = (-charged_per_share + share_price * 1) * T
+    # 2nd, we can find the nodes marking the boundary between
+    # profitable and not profitable by marking a node whenever the
+    # expected dV in some dt is negative.
+    # 3rd, we can simulate a bunch of paths using the values from part
+    # (1), but killing the simulation if we hit this boundary
   end
 
   # initial_per_share: FMV of shares on day 0
