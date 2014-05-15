@@ -26,24 +26,18 @@ class OptionValue
     scale = stddev * rho
     x = mean + scale * Math.cos(theta)
     # y = mean + scale * Math.sin(theta)
-    return x
+    x
   end
 
   # P[z > N]
   def self.cdf(z)
-    (0.5 * (1.0 + Math.erf((z*1.0)/1.4142135623730951)))
-  end
-
-  def delta(val_per_share, time_left)
-    dist_from_mean = val_per_share - charged_per_share
-    to_z = dist_from_mean / volatility / Math.sqrt(time_left)
+    (0.5 * (1.0 + Math.erf((z * 1.0) / 1.4142135623730951)))
   end
 
   # Generates stock value nodes
   def gen_binomial_tree_prices
     u = udp[:u]
     d = udp[:d]
-    p = udp[:p]
     tree = [[initial_per_share]]
     t = 0
     while t < duration - 1e-6
@@ -90,7 +84,6 @@ class OptionValue
     #  (1 because we assume we get 1 share per unit time)
     tree_of_vals = val_tree
 
-
     # -2nd, we can simulate a bunch of paths using the values from part
     #  (1), but killing the simulation if we hit a boundary whereby
     #  our E[dV] < 0
@@ -108,14 +101,17 @@ class OptionValue
       this_val = nil
       this_lv = nil
       idxs_for_up_down.each_with_index do |vidx, tidx|
-        # if it's not the first iteration, it's after the cliff, and
+        # If it's not the first iteration, it's after the cliff, and
         # it's not the last index, we have the option of stopping
-        # and not taking a step. do so if E[dV] is negative
-        if !this_val.nil? && !(tidx * dt > cliff - 1e-6) && tidx < idxs_for_up_down.size - 1
-          edV = p * (tree_of_vals[tidx + 1][vidx + 1]) +
+        # and not taking a step. Do so if E[dV] is negative
+        if !this_val.nil? && (tidx * dt > cliff - 1e-6) && tidx < idxs_for_up_down.size - 1
+          e_dv = p * (tree_of_vals[tidx + 1][vidx + 1]) +
                   (1 - p) * (tree_of_vals[tidx + 1][vidx]) -
                   this_val
-          break if edV < 0
+          if e_dv < 0
+            this_lv = tidx
+            break
+          end
         end
         this_lv = tidx
         this_val = tree_of_vals[tidx][vidx]
@@ -125,17 +121,28 @@ class OptionValue
     end
     {
       val: sum_val.to_f / n,
-      lv:  sum_lv.to_f / n
+      lv:  sum_lv.to_f / n * dt
     }
   end
 
-  # bop = OptionValue.new(1, 0.2, 0.4, 1.5, 1, 4, 1.0 / 3, 0.1)
-  # initial_per_share: FMV of shares on day 0
-  # charged_per_share: how much charged per share per unit time
-  # ...assuming we get one share per unit time...
-  def initialize(initial_per_share, drift, volatility, charged_per_share,
+  # Artsy:
+  #  drift:             doesn't matter because we are risk neutral (we can repro this option by buying shares)
+  #  volatility:        60% feels about right
+  #  charged_per_share: In 1 year of work, I could keep (after taxes), minimum, 1.5x what they're paying me in equity
+  #  cliff:             1 year (meaning no optionality for the first year)
+  #  duration:          4 years total of optionality
+  #  dt:                0.01 is pretty darn convergent
+  #  interest_rate:     I'd be charged 10% by a bank to borrow against future earnings (say, at GS) to buy Artsy stock
+  #
+  # Conclusion of simulation:
+  #  OptionValue.new(1, 0.2, 0.6, 1.5, 0, 4, 1.0 / 8, 0.1).binomial_tree_path_sim(10000)
+  #  {:val=>-0.05029825586285045, :lv=>1.1239125}
+  # ...it's slightly negative financially to work at Artsy, and optimal leave is 1.12 years
+  # Interestingly, it's POSITIVE if there is no cliff...
+  #
+  def initialize(drift, volatility, charged_per_share,
       cliff = 1, duration = 4, dt = 0.01, interest_rate = 0.1)
-    self.initial_per_share = initial_per_share
+    self.initial_per_share = 1
     self.drift             = drift
     self.volatility        = volatility
     self.charged_per_share = charged_per_share
