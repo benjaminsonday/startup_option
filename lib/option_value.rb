@@ -135,11 +135,13 @@ class OptionValue
   #  interest_rate:     I'd be charged 10% by a bank to borrow against future earnings (say, at GS) to buy Artsy stock
   #
   # Conclusion of simulation:
-  #  OptionValue.new(1, 0.2, 0.6, 1.5, 0, 4, 1.0 / 8, 0.1).binomial_tree_path_sim(10000)
-  #  {:val=>-0.05029825586285045, :lv=>1.1239125}
+  #  OptionValue.new(0.2, 0.6, 1.5, 1, 4, 1.0 / 12, 0.1).binomial_tree_path_sim(10000)
+  #  {:val=>-0.24797482805638846, :lv=>1.0821916666666667}
   # ...it's slightly negative financially to work at Artsy, and optimal leave is 1.12 years
   # Interestingly, it's POSITIVE if there is no cliff...
-  #
+  # Here's me today:
+  #  OptionValue.new(0.2, 0.6, 1.5, 5.0 / 12, 4.0 - 7.0 / 12, 1.0 / 12, 0.1 ).binomial_tree_path_sim(10000)
+  #  {:val=>-0.24629676748093784, :lv=>0.5000749999999999} # it's the same! which is expected...
   def initialize(drift, volatility, charged_per_share,
       cliff = 1, duration = 4, dt = 0.01, interest_rate = 0.1)
     self.initial_per_share = 1
