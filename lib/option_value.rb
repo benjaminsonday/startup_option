@@ -78,13 +78,13 @@ class OptionValue
   end
 
   def binomial_tree_path_sim(n = 100)
-    # -1st do binomial tree to figure out how much this contract is worth
+    # *1st do binomial tree to figure out how much this contract is worth
     #  at a bunch of different nodes:
     #  At expiration, V(T,S) = (-charged_per_share + share_price * 1) * T
     #  (1 because we assume we get 1 share per unit time)
     tree_of_vals = val_tree
 
-    # -2nd, we can simulate a bunch of paths using the values from part
+    # *2nd, we can simulate a bunch of paths using the values from part
     #  (1), but killing the simulation if we hit a boundary whereby
     #  our E[dV] < 0
     p = udp[:p]
@@ -128,20 +128,23 @@ class OptionValue
   # Artsy:
   #  drift:             doesn't matter because we are risk neutral (we can repro this option by buying shares)
   #  volatility:        60% feels about right
-  #  charged_per_share: In 1 year of work, I could keep (after taxes), minimum, 1.5x what they're paying me in equity
+  #  charged_per_share: In 1 year of work, what could one keep (after taxes)? 1.5x what one earns in equity?
   #  cliff:             1 year (meaning no optionality for the first year)
   #  duration:          4 years total of optionality
   #  dt:                0.01 is pretty darn convergent
   #  interest_rate:     I'd be charged 10% by a bank to borrow against future earnings (say, at GS) to buy Artsy stock
   #
-  # Conclusion of simulation:
+  # A simulation of interest for, e.g., a new employee:
   #  OptionValue.new(0.2, 0.6, 1.5, 1, 4, 1.0 / 12, 0.1).binomial_tree_path_sim(10000)
   #  {:val=>-0.24797482805638846, :lv=>1.0821916666666667}
-  # ...it's slightly negative financially to work at Artsy, and optimal leave is 1.12 years
+  # ...these parameters say that it's slightly negative financially to work at Artsy,
+  #    and optimal leave is 1.08 years
   # Interestingly, it's POSITIVE if there is no cliff...
-  # Here's me today:
+  #
+  # E.g., an employee a few monts into their first year:
   #  OptionValue.new(0.2, 0.6, 1.5, 5.0 / 12, 4.0 - 7.0 / 12, 1.0 / 12, 0.1 ).binomial_tree_path_sim(10000)
-  #  {:val=>-0.24629676748093784, :lv=>0.5000749999999999} # it's the same! which is expected...
+  #  {:val=>-0.24629676748093784, :lv=>0.5000749999999999}
+  # It's the same (after adding :lv to 7.0 / 12)! Which is expected...
   def initialize(drift, volatility, charged_per_share,
       cliff = 1, duration = 4, dt = 0.01, interest_rate = 0.1)
     self.initial_per_share = 1
